@@ -4,11 +4,14 @@ class tarefa:
     ESTADOS = ["a_fazer", "executando", "pronta"]
 
     def __init__(self, nome: str, descricao: str, estado: str = "a_fazer"):
+        if len(descricao) > 80:
+            raise ValueError("A descrição deve ter no máximo 80 caracteres.")
         if estado not in tarefa.ESTADOS:
             raise ValueError(f"Estado inválido: {estado}")
         self.nome = nome
         self.descricao = descricao
         self.estado = estado
+
 
     def __str__(self):
         return f"{self.nome} - {self.descricao} [{self.estado}]"
@@ -20,16 +23,22 @@ class tarefalista:
         self.tarefas = {estado: [] for estado in tarefa.ESTADOS}
 
     def adicionar_tarefa(self, tarefa: tarefa):
+        if tarefa.estado == "executando" and len(self.tarefas["executando"]) >= 10:
+            raise ValueError("Limite de 10 tarefas 'executando' atingido.")
         self.tarefas[tarefa.estado].append(tarefa)
+
 
     def mover_tarefa(self, index: int, de_estado: str, para_estado: str):
         if de_estado not in self.tarefas or para_estado not in self.tarefas:
             raise ValueError("Estado inválido")
         if index < 0 or index >= len(self.tarefas[de_estado]):
             raise IndexError("Índice de tarefa inválido")
+        if para_estado == "executando" and len(self.tarefas["executando"]) >= 10:
+            raise ValueError("Não é possível mover: limite de 10 tarefas 'executando' atingido.")
         tarefa = self.tarefas[de_estado].pop(index)
         tarefa.estado = para_estado
         self.tarefas[para_estado].append(tarefa)
+
 
     def remover_tarefa(self, index: int, estado: str):
         if estado not in self.tarefas:
@@ -58,7 +67,7 @@ def main():
 
     while True:
         limpar_terminal()
-        print("Bem-vindo à ToDo lista OOP!")
+        print("Bem-vindo à To do list (lista de tarefas)!")
         print("1. listar tarefas")
         print("2. Adicionar tarefa")
         print("3. Mover tarefa")
@@ -73,8 +82,14 @@ def main():
 
         elif escolha == '2':
             nome = input("Nome da tarefa: ")
-            descricao = input("Descrição: ")
-            lista_de_tarefas.adicionar_tarefa(tarefa(nome, descricao))
+            descricao = input("Descrição (máx 80 caracteres): ")
+            try:
+                nova = tarefa(nome, descricao)
+                lista_de_tarefas.adicionar_tarefa(nova)
+            except ValueError as e:
+                print(f"Erro: {e}")
+                input("Pressione Enter para continuar...")
+
 
         elif escolha == '3':
             limpar_terminal()
